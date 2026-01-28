@@ -1,0 +1,67 @@
+{
+  "name": "qyt",
+  "version": "1.0.0",
+  "description": "Web browser extension plugin to quickly play selected YouTube videos",
+  "main": "manifest.json",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint app/",
+    "package-verify": "eslint . && npm run deploy && web-ext --source-dir ./platforms lint",
+    "ci": "npm run test && npm run package-verify",
+    "deploy-dev": "babel --config-file ./.babelrc ./app -Dd ./build/app && webpack --config ./webpack.config.js --mode development",
+    "deploy-prod": "babel --config-file ./.babelrc ./app -Dd ./build/app && webpack --config ./webpack.config.js --mode production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BartoszKlonowski/qyt.git"
+  },
+  "keywords": [
+    "Firefox",
+    "Extension",
+    "Plugin",
+    "Session",
+    "YouTube"
+  ],
+  "author": "Bartosz Klonowski",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/BartoszKlonowski/qyt/issues"
+  },
+  "homepage": "https://github.com/BartoszKlonowski/qyt#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.14.5",
+    "@babel/core": "^7.15.8",
+    "@babel/eslint-parser": "^7.17.0",
+    "@babel/node": "^7.14.7",
+    "@babel/preset-env": "^7.14.7",
+    "@babel/preset-react": "^7.14.5",
+    "@babel/register": "^7.14.5",
+    "babel-preset-react-app": "^10.0.0",
+    "eslint": "^7.28.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-jsx-a11y": "^6.6.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-react": "^7.26.1",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "prettier": "^2.3.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-test-renderer": "^19.2.4",
+    "web-ext": "^8.1.0",
+    "webextension-polyfill": "^0.10.0",
+    "webpack": "^5.94.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "jest": {
+    "verbose": true,
+    "moduleNameMapper": {
+      ".\\Database": "<rootDir>/platforms/mozilla/app/src/engine/Database.js",
+      "\\.(png)$": "<rootDir>/__tests__/setupTest.js"
+    },
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/setupTest.js"
+    ],
+    "testEnvironment": "jsdom"
+  }
+}

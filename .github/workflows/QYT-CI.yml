@@ -1,0 +1,150 @@
+name: QYT-CI
+
+on: [push]
+
+jobs:
+  install:
+    name: Install dependencies
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v4.2.3
+        env:
+          cache-name: cached-npm-deps
+        with:
+          path: ./node_modules
+          key: ${{ hashFiles('./package.json') }}
+
+      - name: Install required dependencies on cache miss (npm)
+        if: steps.cache-npm.outputs.cache-hit != 'true'
+        run: |
+          npm install
+
+  verify:
+    name: Verify the sources
+    runs-on: windows-latest
+    needs: install
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Cache
+        uses: actions/cache@v4.2.3
+        with:
+          path: ./node_modules
+          key: ${{ hashFiles('./package.json') }}
+
+      - name: Run ESLint on the sources
+        run: npm run lint
+
+
+  pre-build-package-verify:
+    name: Verify the package before build
+    runs-on: windows-latest
+    needs: [verify, pre-build-package-compile-cross-platform]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Pull the npm dependencies
+        uses: actions/cache@v4.2.3
+        with:
+          path: ./node_modules
+          key: ${{ hashFiles('./package.json') }}
+
+      - name: Pull the compiled sources
+        uses: actions/cache@v4.2.3
+        with:
+          path: ./platforms
+          key: ${{ hashFiles('./package.json') }}-${{ hashFiles('./platforms/mozilla/app/manifest.json') }}-${{ hashFiles('./platforms/chromium/app/manifest.json') }}
+
+      - name: Verify the package for Mozilla
+        run: npx web-ext --source-dir "./platforms/mozilla/app" lint
+
+
+  pre-build-package-compile-cross-platform:
+    name: Compile the sources before build
+    runs-on: windows-latest
+    needs: [verify]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Pull the npm dependencies
+        uses: actions/cache@v4.2.3
+        with:
+          path: ./node_modules
+          key: ${{ hashFiles('./package.json') }}
+
+      - name: Compile sources for Mozilla engine
+        run: npm run deploy-mozilla
+
+      - name: Compile sources for Chromium engine
+        run: npm run deploy-chromium
+
+      - name: Cache
+        uses: actions/cache@v4.2.3
+        with:
+          path: ./platforms
+          key: ${{ hashFiles('./package.json') }}-${{ hashFiles('./platforms/mozilla/app/manifest.json') }}-${{ hashFiles('./platforms/chromium/app/manifest.json') }}
+
+
+  build-cross-platform:
+    name: Build the release package
+    runs-on: windows-latest
+    needs: [pre-build-package-verify, pre-build-package-compile-cross-platform]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Pull the npm dependencies
+        uses: actions/cache@v4.2.3
+        with:
+          path: ./node_modules
+          key: ${{ hashFiles('./package.json') }}
+
+      - name: Pull the compiled sources
+        uses: actions/cache@v4.2.3
+        with:
+          path: ./platforms
+          key: ${{ hashFiles('./package.json') }}-${{ hashFiles('./platforms/mozilla/app/manifest.json') }}-${{ hashFiles('./platforms/chromium/app/manifest.json') }}
+
+      - name: Build the release package of Mozilla engine
+        run: npx web-ext build --source-dir "./platforms/mozilla/app" --overwrite-dest
+
+      - name: Store the built package
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate-package-mozilla
+          path: ./web-ext-artifacts/*
+
+      - name: Build the release package of Chromium engine
+        run: npx web-ext build --source-dir "./platforms/chromium/app" --overwrite-dest
+
+      - name: Store the built package
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate-package-chromium
+          path: ./web-ext-artifacts/*

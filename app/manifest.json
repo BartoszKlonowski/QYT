@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "QYT - Quick YouTube",
+  "version": "1.0.0",
+
+  "permissions": [
+    "activeTab",
+    "tabs"
+  ],
+
+  "icons": {
+    "600": "icons/QYTIcon.png"
+  },
+
+  "description": "Displays and plays the selected video from Youtube service",
+
+  "action": {
+    "default_icon": "icons/QYTIcon.png",
+    "default_title": "QYT",
+    "default_popup": "src/popup/Main.html"
+  }
+}
