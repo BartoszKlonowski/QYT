@@ -1,16 +1,9 @@
-if (!browser) {
-    try {
-        var browser = require("webextension-polyfill");
-    } catch (error) {
-        // eslint-disable-next-line no-redeclare
-        var browser = global.browser;
-    }
-}
+import Browser from "webextension-polyfill";
 
 export const SupportedLanguages = ["en", "pl"];
 
 export function getSupportedBrowserLanguage() {
-    const browserLanguage = browser.i18n.getUILanguage().toLowerCase();
+    const browserLanguage = Browser.i18n.getUILanguage().toLowerCase();
     for (const supported of SupportedLanguages) {
         if (supported.toLowerCase() === browserLanguage) {
             return browserLanguage;
@@ -23,6 +16,6 @@ export function getLanguageSource(language = "en") {
     return require(`./translations/${language}.json`);
 }
 
-export function translate(label) {
+export function translate(label: string) {
     return getLanguageSource(getSupportedBrowserLanguage())[label];
 }

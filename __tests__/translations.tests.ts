@@ -1,3 +1,4 @@
+import Browser from "webextension-polyfill";
 import {
     getSupportedBrowserLanguage,
     getLanguageSource,
@@ -6,7 +7,7 @@ import {
 
 describe("i18n", () => {
     it("uses English language as the default one", () => {
-        browser.i18n.getUILanguage = () => "Fake test non-existing language";
+        Browser.i18n.getUILanguage = () => "Fake test non-existing language";
         expect(getSupportedBrowserLanguage()).toBe("en");
     });
 
